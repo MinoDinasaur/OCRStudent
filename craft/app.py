@@ -122,4 +122,4 @@ gr.Interface(
     flagging_options=["Correct", "Wrong"],
     flagging_dir="Results",
     enable_queue=True   
-    ).launch(debug=True)
+    ).launch(debug=True, share=True)
