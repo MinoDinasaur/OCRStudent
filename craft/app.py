@@ -16,22 +16,16 @@ import os
 import random
 import cv2
 import matplotlib.pyplot as plt
-try:
-    from PIL import Image
-except ImportError:
-    from PIL import Image 
 
 def draw_boxes(image, bounds, color='yellow', width=2):
     draw = ImageDraw.Draw(image)
     for bound in bounds:
-        # print(bound)
-        # p0, p1, p2, p3 = bound[0]
         p0, p1, p2, p3 = bound
         draw.line([*p0, *p1, *p2, *p3, *p0], fill=color, width=width)
     return image
 
 def inference(img_path, lang):
-    #load image
+    # Load image
     img = PIL.Image.open(img_path)
 
     # ============================ Scene Text Detection ============================
@@ -46,7 +40,7 @@ def inference(img_path, lang):
 
     args = parser.parse_args()
 
-    # load configure
+    # Load configuration
     config = load_yaml(args.yaml)
     config = DotDict(config)
 
@@ -75,10 +69,10 @@ def inference(img_path, lang):
         x3, y3 = p2
         x4, y4 = p3
 
-        top_left_x = min([x1,x2,x3,x4])
-        top_left_y = min([y1,y2,y3,y4])
-        bot_right_x = max([x1,x2,x3,x4])
-        bot_right_y = max([y1,y2,y3,y4])
+        top_left_x = min([x1, x2, x3, x4])
+        top_left_y = min([y1, y2, y3, y4])
+        bot_right_x = max([x1, x2, x3, x4])
+        bot_right_y = max([y1, y2, y3, y4])
 
         lang = 'vie' 
         config = r'--oem 3 --psm 6'
@@ -89,33 +83,32 @@ def inference(img_path, lang):
         extractedInformation = extractedInformation.strip()  # Remove newline characters
         print(extractedInformation)        
         extracted_info.append(extractedInformation)
-        
 
-    # ====================================================================================
-
-    # reader = easyocr.Reader(lang)
-    # bounds = reader.readtext(img_path)
-    # print(bounds)
+    # Draw bounding boxes on the image
     draw_boxes(img, bounds)
     img.save('result.jpg')
-    # return ['result.jpg', pd.DataFrame(extracted_info).iloc[: , 1:]]
+
+    # Prepare output data
     df = pd.DataFrame(extracted_info, columns=['Extracted Information'])
     df = df.rename_axis(None, axis=1)
 
-    return ['result.jpg', df]
-            
+    return 'result.jpg', df
+
+# Gradio Interface
 title = 'STUDENT ID INFORMATION EXTRACTION'
 description = '<div style="text-align: center;"><h3>Demo for Student ID information extraction</h3><p>To use it, simply upload your image and choose a language from the dropdown menu.</p></div>'
-choices = [
-    "en",
-    "uk",
-    "vi"
-]
+choices = ["en", "uk", "vi"]
 
 gr.Interface(
-    inference,
-    [gr.inputs.Image(type='filepath',label='Input'),gr.inputs.CheckboxGroup(choices, type="value", default=['vi'], label='Language')],
-    [gr.outputs.Image(type='filepath',label='Output'), gr.outputs.Dataframe(type='array', headers=['Extracted Information'], label='Output')],
+    fn=inference,
+    inputs=[
+        gr.Image(type='filepath', label='Input'),
+        gr.CheckboxGroup(choices=choices, type="value", value=['vi'], label='Language')
+    ],
+    outputs=[
+        gr.Image(type='filepath', label='Output'),
+        gr.Dataframe(headers=['Extracted Information'], label='Output')
+    ],
     title=title,
     description=description,
     allow_flagging="manual",
@@ -123,4 +116,4 @@ gr.Interface(
     flagging_dir="Results",
     live=True,
     enable_queue=True   
-    ).launch(debug=True, share=True)
+).launch(debug=True, share=True)
