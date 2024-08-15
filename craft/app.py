@@ -113,6 +113,5 @@ gr.Interface(
     description=description,
     allow_flagging="manual",
     flagging_options=["Correct", "Wrong"],
-    flagging_dir="Results",
-    live=True   
-).launch(debug=True, share=True)
+    flagging_dir="Results",   
+).launch(debug=True)
